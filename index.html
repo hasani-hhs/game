@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Scam or Legit | AllMyOption</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%90%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#0B1220; --panel:#131C30; --line:#26324A;
+    --gold:#C9A227; --gold-bright:#E7C863; --gold-dim:#8A7326;
+    --safe:#2F9E68; --danger:#C1443C;
+    --text:#EDE9DD; --text-dim:#93A0B8; --text-faint:#5C6A85;
+    color-scheme: dark;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; overscroll-behavior:none; }
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    min-height:100vh; min-height:100dvh;
+    display:flex; justify-content:center;
+    touch-action:none; user-select:none;
+  }
+  .app{
+    position:relative;
+    width:100%; max-width:460px;
+    height:100vh; height:100dvh;
+    display:flex; flex-direction:column;
+    background:var(--bg);
+    overflow:hidden;
+  }
+
+  .hud{
+    position:absolute; top:0; left:0; right:0; z-index:5;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 14px 0; pointer-events:none;
+  }
+  .hud-chip{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(19,28,48,0.82); border:1px solid var(--line);
+    padding:6px 10px; font-size:13px; color:var(--text-dim);
+    backdrop-filter:blur(3px);
+  }
+  .hud-chip b{ color:var(--gold-bright); font-weight:700; }
+  .coin-dot{ width:12px; height:12px; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, var(--gold-dim)); flex:none; }
+  .lives{ display:flex; gap:4px; }
+  .key-icon{ width:15px; height:15px; transition:opacity .3s, transform .3s; }
+  .key-icon.spent{ opacity:.18; transform:scale(.8); }
+  .key-icon svg{ width:100%; height:100%; display:block; }
+
+  canvas{ position:absolute; inset:0; display:block; }
+
+  .ctrl{
+    position:absolute; bottom:22px; z-index:5;
+    width:62px; height:62px; border-radius:50%;
+    background:rgba(19,28,48,0.82); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gold-bright);
+  }
+  .ctrl.left{ left:18px; }
+  .ctrl.right{ right:18px; }
+  .ctrl:active{ background:rgba(201,162,39,0.22); }
+  .ctrl svg{ width:26px; height:26px; }
+
+  .overlay{
+    position:absolute; inset:0; z-index:10;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:26px 24px; background:linear-gradient(180deg, rgba(11,18,32,0.97), rgba(11,18,32,0.99));
+    overflow-y:auto;
+  }
+  .overlay.hidden{ display:none; }
+  .eyebrow{ font-size:12.5px; letter-spacing:.03em; color:var(--gold-bright); font-weight:600; margin-bottom:8px; }
+  h1{ font-size:26px; line-height:1.32; margin:0 0 12px; font-weight:700; }
+  p{ font-size:14.5px; line-height:1.75; color:var(--text-dim); margin:0 0 14px; }
+  .btn{
+    display:block; width:100%; text-align:center; cursor:pointer;
+    background:var(--gold); color:#1B1305; border:none;
+    font-family:inherit; font-size:15.5px; font-weight:700;
+    padding:15px 18px; margin-top:8px;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.secondary{ background:transparent; color:var(--text); border:1px solid var(--line); font-weight:600; }
+  .btn.ghost{ background:transparent; color:var(--text-faint); border:none; font-size:13px; text-decoration:underline; padding:10px; }
+  .stat-row{ display:flex; gap:10px; margin:6px 0 18px; }
+  .stat-box{ flex:1; border:1px solid var(--line); background:var(--panel); padding:12px; text-align:center; }
+  .stat-box .num{ font-size:24px; font-weight:700; color:var(--gold-bright); }
+  .stat-box .lab{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+  .vault-visual{ width:96px; height:96px; margin:0 auto 14px; }
+  .center{ text-align:center; }
+  .legend{ display:flex; gap:14px; margin:2px 0 18px; font-size:12px; color:var(--text-faint); justify-content:center; flex-wrap:wrap; }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:11px; height:11px; flex:none; }
+  .swatch.g{ background:var(--gold); }
+  .swatch.r{ background:var(--danger); }
+  .toast{
+    position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--gold-dim); color:var(--text);
+    padding:9px 16px; font-size:13px; opacity:0; pointer-events:none;
+    transition:opacity .25s; z-index:20;
+  }
+  .toast.show{ opacity:1; }
+  .fine{ font-size:11px; color:var(--text-faint); margin-top:-6px; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="hud" id="hud" style="display:none;">
+    <div class="hud-chip"><span class="coin-dot"></span> <b id="coinCount">0</b></div>
+    <div class="hud-chip" id="distChip">0m</div>
+    <div class="hud-chip lives" id="livesBox"></div>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <div class="ctrl left" id="ctrlLeft"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="ctrl right" id="ctrlRight"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ Telegram bridge ============ */
+var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+try{
+  if (tg){ tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor('#0B1220'); tg.setBackgroundColor && tg.setBackgroundColor('#0B1220'); }
+}catch(e){}
+function haptic(kind){
+  try{
+    if (!tg || !tg.HapticFeedback) return;
+    if (kind==='good') tg.HapticFeedback.impactOccurred('light');
+    else if (kind==='bad') tg.HapticFeedback.notificationOccurred('error');
+    else if (kind==='win') tg.HapticFeedback.notificationOccurred('success');
+  }catch(e){}
+}
+function openExternal(url){
+  try{ if (tg && tg.openLink){ tg.openLink(url); return; } }catch(e){}
+  window.open(url, '_blank');
+}
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+var BEST_KEY='amo_scam_or_legit_best';
+function getBest(){ try{ return parseInt(localStorage.getItem(BEST_KEY)||'0',10)||0; }catch(e){ return 0; } }
+function setBest(v){ try{ localStorage.setItem(BEST_KEY, String(v)); }catch(e){} }
+
+function keySvg(){
+  return '<svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" stroke="var(--gold-bright)" stroke-width="2"/><path d="M11.5 11.5L20 20M20 20V15M20 20H15" stroke="var(--gold-bright)" stroke-width="2" stroke-linecap="round"/></svg>';
+}
+function vaultOpenSvg(){
+  return '<svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="52" stroke="var(--gold-dim)" stroke-width="2"/><circle cx="60" cy="60" r="34" stroke="var(--gold)" stroke-width="2"/><circle cx="60" cy="60" r="8" fill="var(--gold-bright)"/><line x1="60" y1="26" x2="60" y2="8" stroke="var(--gold)" stroke-width="3"/><line x1="60" y1="94" x2="60" y2="112" stroke="var(--gold)" stroke-width="3"/><line x1="26" y1="60" x2="8" y2="60" stroke="var(--gold)" stroke-width="3"/><line x1="94" y1="60" x2="112" y2="60" stroke="var(--gold)" stroke-width="3"/></svg>';
+}
+function vaultLockedSvg(){
+  return '<svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="52" stroke="var(--danger)" stroke-width="2"/><path d="M60 34L86 86H34L60 34Z" stroke="var(--danger)" stroke-width="2" stroke-linejoin="round"/><circle cx="60" cy="72" r="3" fill="var(--danger)"/></svg>';
+}
+
+/* ============ AllMyOption data ============ */
+/* Real exchanges reviewed on AllMyOption, with their real logos. */
+var LEGIT = [
+  { name:'BYDFi',      logo:'https://allmyoption.com/api/v1/media/files/dbbe1eed-2554-4852-bfbc-993e44be3f3f.png' },
+  { name:'PrimeXBT',   logo:'https://allmyoption.com/api/v1/media/files/c7e38c51-4d51-4839-980b-fca4e86fcc32.png' },
+  { name:'LBank',      logo:'https://allmyoption.com/api/v1/media/files/43329f6a-8a87-44d7-b989-d3fcd681e9cf.webp' },
+  { name:'Ourbit',     logo:'https://allmyoption.com/api/v1/media/files/9be700ab-c1fc-48dd-96fd-c5f2c4bb3ac5.webp' },
+  { name:'Swapzone',   logo:'https://allmyoption.com/api/v1/media/files/b8dcfc25-7967-4738-b680-9d19d692cf42.webp' },
+  { name:'ChangeHero', logo:'https://allmyoption.com/api/v1/media/files/31286b0c-b133-4c71-a157-fd5d4b25a30f.webp' },
+  { name:'Deepcoin',   logo:'https://allmyoption.com/api/v1/media/files/b91a34e3-b0d7-4f56-b381-65a891b4c8e2.webp' }
+];
+/* Invented, fictional platform names used only as generic "scam pattern" hazards.
+   None of these refer to any real exchange or company. */
+var SCAM_NAMES = ['CoinVaultX','ZenithSwap Pro','LunexTrade','MoonYield Exchange','QuickCoin Global','TrustFinance Coin','NovaCoinHub','SafeGain Exchange','RapidX Markets','GoldBit Vault'];
+
+var logoCache = {};
+LEGIT.forEach(function(e){
+  var img = new Image();
+  img.onerror = function(){ e.broken = true; };
+  img.src = e.logo;
+  logoCache[e.name] = img;
+});
+
+/* ============ canvas setup ============ */
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var appEl = document.getElementById('app');
+var DPR = Math.min(window.devicePixelRatio || 1, 2);
+var W=0, H=0;
+function resize(){
+  var rect = appEl.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ============ game constants ============ */
+var LANES = 3;
+var LIVES_MAX = 3;
+var WIN_METERS = 1400;
+var PLAYER_Y_FRAC = 0.80;
+var BASE_SPEED = 200;
+var MAX_SPEED = 600;
+var BASE_SPAWN_MS = 1300;
+var MIN_SPAWN_MS = 600;
+
+function laneX(i){ return (W/LANES) * (i+0.5); }
+
+/* ============ game state ============ */
+var G = null;
+function newGame(){
+  return {
+    running:false,
+    lane:1, targetLane:1, laneAnim:1,
+    lives:LIVES_MAX, coins:0, meters:0,
+    speed:BASE_SPEED, spawnMs:BASE_SPAWN_MS, spawnTimer:0,
+    invulnUntil:0, dashOffset:0,
+    objects:[],
+    lastTs:0
+  };
+}
+
+function renderHud(){
+  document.getElementById('coinCount').textContent = String(G.coins);
+  document.getElementById('distChip').textContent = Math.floor(G.meters)+'m';
+  var box = document.getElementById('livesBox');
+  box.innerHTML='';
+  for (var i=0;i<LIVES_MAX;i++){
+    var s=document.createElement('span');
+    s.className='key-icon'+(i<G.lives?'':' spent');
+    s.innerHTML=keySvg();
+    box.appendChild(s);
+  }
+}
+
+/* ============ spawning ============ */
+function spawnWave(){
+  var count = (G.meters > 250 && Math.random() < 0.55) ? 2 : 1; // never block all 3 lanes
+  var lanes = [0,1,2].sort(function(){ return Math.random()-0.5; }).slice(0, count);
+  lanes.forEach(function(l){
+    var isScam = Math.random() < 0.42;
+    if (isScam){
+      var name = SCAM_NAMES[Math.floor(Math.random()*SCAM_NAMES.length)];
+      G.objects.push({ lane:l, y:-40, type:'scam', label:name, dead:false });
+    } else {
+      var ex = LEGIT[Math.floor(Math.random()*LEGIT.length)];
+      G.objects.push({ lane:l, y:-40, type:'legit', label:ex.name, exchange:ex, dead:false });
+    }
+  });
+}
+
+/* ============ drawing helpers ============ */
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function fitFont(text, maxWidth, baseSize){
+  var size = baseSize;
+  ctx.font = '700 '+size+'px Space Grotesk, sans-serif';
+  while (ctx.measureText(text).width > maxWidth && size > 7){
+    size -= 1;
+    ctx.font = '700 '+size+'px Space Grotesk, sans-serif';
+  }
+  return size;
+}
+function drawWarningIcon(cx, cy, size){
+  ctx.fillStyle = '#C1443C';
+  ctx.strokeStyle = '#E9847C';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy-size/2);
+  ctx.lineTo(cx+size/2, cy+size/2);
+  ctx.lineTo(cx-size/2, cy+size/2);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#1B0B0A';
+  ctx.font = '700 '+Math.floor(size*0.55)+'px Space Grotesk, sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('!', cx, cy+size*0.12);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0B1220';
+  ctx.fillRect(0,0,W,H);
+
+  var laneW = W/LANES;
+  ctx.strokeStyle = 'rgba(201,162,39,0.28)';
+  ctx.lineWidth = 2;
+  for (var i=1;i<LANES;i++){
+    var x = laneW*i;
+    ctx.setLineDash([18,16]);
+    ctx.lineDashOffset = -G.dashOffset;
+    ctx.beginPath();
+    ctx.moveTo(x,0); ctx.lineTo(x,H);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(38,50,74,0.9)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(1.5,0,W-3,H);
+
+  var playerY = H*PLAYER_Y_FRAC;
+  var badgeW = Math.min(laneW*0.76, 118);
+  var badgeH = 66;
+
+  G.objects.forEach(function(o){
+    var x = laneX(o.lane);
+    var isScam = o.type==='scam';
+    ctx.fillStyle = isScam ? 'rgba(193,68,60,0.14)' : 'rgba(47,158,104,0.13)';
+    ctx.strokeStyle = isScam ? '#C1443C' : '#2F9E68';
+    ctx.lineWidth = 2;
+    roundRect(x-badgeW/2, o.y-badgeH/2, badgeW, badgeH, 10);
+    ctx.fill(); ctx.stroke();
+
+    // small tag pill top-right of badge
+    var tag = isScam ? 'SCAM' : 'LEGIT';
+    ctx.font = '700 8px Space Grotesk, sans-serif';
+    var tagW = ctx.measureText(tag).width + 10;
+    var tagX = x + badgeW/2 - tagW - 4;
+    var tagY = o.y - badgeH/2 + 3;
+    ctx.fillStyle = isScam ? '#C1443C' : '#2F9E68';
+    roundRect(tagX, tagY, tagW, 12, 6);
+    ctx.fill();
+    ctx.fillStyle = '#0B1220';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tag, tagX+tagW/2, tagY+6.5);
+
+    // icon / logo
+    var iconCY = o.y - 12;
+    if (isScam){
+      drawWarningIcon(x, iconCY, 24);
+    } else {
+      var img = logoCache[o.exchange.name];
+      if (img && img.complete && img.naturalWidth > 0 && !o.exchange.broken){
+        var s = 26;
+        ctx.save();
+        roundRect(x-s/2, iconCY-s/2, s, s, 5);
+        ctx.clip();
+        ctx.drawImage(img, x-s/2, iconCY-s/2, s, s);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#E7C863';
+        ctx.beginPath(); ctx.arc(x, iconCY, 12, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#1B1305';
+        ctx.font='700 13px Space Grotesk, sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(o.exchange.name.charAt(0), x, iconCY+1);
+      }
+    }
+
+    // label
+    var fs = fitFont(o.label, badgeW-14, 12);
+    ctx.fillStyle = isScam ? '#E9847C' : '#E7C863';
+    ctx.font = '700 '+fs+'px Space Grotesk, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(o.label, x, o.y+18);
+  });
+
+  // player
+  var px = laneX(G.laneAnim);
+  var flashing = performance.now() < G.invulnUntil && Math.floor(performance.now()/90)%2===0;
+  ctx.save();
+  ctx.globalAlpha = flashing ? 0.35 : 1;
+  ctx.fillStyle = '#E7C863';
+  ctx.strokeStyle = '#8A7326';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px, playerY-24);
+  ctx.lineTo(px+18, playerY+18);
+  ctx.lineTo(px, playerY+9);
+  ctx.lineTo(px-18, playerY+18);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+/* ============ update loop ============ */
+function update(dt){
+  G.speed = Math.min(MAX_SPEED, BASE_SPEED + G.meters*0.55);
+  G.spawnMs = Math.max(MIN_SPAWN_MS, BASE_SPAWN_MS - G.meters*0.55);
+  G.meters += (G.speed*dt)/60;
+  G.dashOffset += G.speed*dt;
+  G.laneAnim += (G.targetLane - G.laneAnim) * Math.min(1, dt*10);
+
+  G.spawnTimer += dt*1000;
+  if (G.spawnTimer >= G.spawnMs){
+    G.spawnTimer = 0;
+    spawnWave();
+  }
+
+  var playerY = H*PLAYER_Y_FRAC;
+  var now = performance.now();
+
+  G.objects.forEach(function(o){
+    if (o.dead) return;
+    o.y += G.speed*dt;
+    if (!o.passed && o.y >= playerY-10 && o.y <= playerY+18 && o.lane===G.lane){
+      o.passed = true;
+      if (o.type==='legit'){
+        G.coins += 10;
+        haptic('good');
+      } else {
+        if (now >= G.invulnUntil){
+          G.lives -= 1;
+          G.invulnUntil = now + 1100;
+          haptic('bad');
+        }
+      }
+      o.dead = true;
+    }
+    if (o.y > H+60) o.dead = true;
+  });
+  G.objects = G.objects.filter(function(o){ return !o.dead; });
+
+  renderHud();
+
+  if (G.lives <= 0){ endRun(false); return; }
+  if (G.meters >= WIN_METERS){ endRun(true); return; }
+}
+
+var rafId = null;
+function loop(ts){
+  if (!G.running) return;
+  if (!G.lastTs) G.lastTs = ts;
+  var dt = Math.min(0.05, (ts - G.lastTs)/1000);
+  G.lastTs = ts;
+  update(dt);
+  draw();
+  rafId = requestAnimationFrame(loop);
+}
+
+/* ============ controls ============ */
+function moveLane(dir){
+  if (!G || !G.running) return;
+  G.targetLane = Math.max(0, Math.min(LANES-1, G.targetLane+dir));
+  G.lane = G.targetLane;
+}
+document.getElementById('ctrlLeft').addEventListener('touchstart', function(e){ e.preventDefault(); moveLane(-1); }, {passive:false});
+document.getElementById('ctrlRight').addEventListener('touchstart', function(e){ e.preventDefault(); moveLane(1); }, {passive:false});
+document.getElementById('ctrlLeft').addEventListener('click', function(){ moveLane(-1); });
+document.getElementById('ctrlRight').addEventListener('click', function(){ moveLane(1); });
+window.addEventListener('keydown', function(e){
+  if (e.key==='ArrowLeft' || e.key==='a' || e.key==='A') moveLane(-1);
+  if (e.key==='ArrowRight' || e.key==='d' || e.key==='D') moveLane(1);
+});
+var touchStartX=null;
+canvas.addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; }, {passive:true});
+canvas.addEventListener('touchend', function(e){
+  if (touchStartX===null) return;
+  var dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 34) moveLane(dx>0?1:-1);
+  touchStartX=null;
+}, {passive:true});
+
+/* ============ screens ============ */
+var overlay = document.getElementById('overlay');
+var hud = document.getElementById('hud');
+var ctrlLeft = document.getElementById('ctrlLeft');
+var ctrlRight = document.getElementById('ctrlRight');
+function showControls(show){
+  ctrlLeft.style.display = show?'flex':'none';
+  ctrlRight.style.display = show?'flex':'none';
+}
+
+function showIntro(){
+  hud.style.display='none';
+  showControls(false);
+  var best = getBest();
+  overlay.classList.remove('hidden');
+  overlay.innerHTML =
+    '<div class="eyebrow">AllMyOption</div>' +
+    '<h1>Scam or Legit</h1>' +
+    '<p>Steer across three lanes at speed. Collect real exchanges reviewed on AllMyOption, and dodge the scam-pattern names — badges are tagged so you can tell them apart before you decide.</p>' +
+    '<div class="legend">' +
+      '<span><span class="swatch g"></span>LEGIT — real, reviewed exchange, collect it</span>' +
+      '<span><span class="swatch r"></span>SCAM — dodge it</span>' +
+    '</div>' +
+    '<p class="fine">Scam badges use invented placeholder names for gameplay only — they do not refer to any real company.</p>' +
+    (best>0 ? '<p style="margin-top:-4px;color:var(--gold-bright);font-size:13px;">Best score: '+best+' coins</p>' : '') +
+    '<button class="btn" id="startBtn">Start Run</button>' +
+    '<button class="btn ghost" id="howBtn">Steer with arrow keys, on-screen buttons, or swipe</button>';
+  document.getElementById('startBtn').addEventListener('click', startRun);
+}
+
+function startRun(){
+  overlay.classList.add('hidden');
+  hud.style.display='flex';
+  showControls(true);
+  G = newGame();
+  G.running = true;
+  renderHud();
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+}
+
+function endRun(won){
+  G.running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  showControls(false);
+  var best = getBest();
+  if (G.coins > best){ setBest(G.coins); best = G.coins; }
+
+  overlay.classList.remove('hidden');
+  if (won){
+    haptic('win');
+    overlay.innerHTML =
+      '<div class="center"><div class="vault-visual">'+vaultOpenSvg()+'</div></div>' +
+      '<div class="eyebrow center" style="text-align:center;">Run complete</div>' +
+      '<h1 class="center">You told scam from legit the whole way</h1>' +
+      '<div class="stat-row">' +
+        '<div class="stat-box"><div class="num">'+G.coins+'</div><div class="lab">Coins</div></div>' +
+        '<div class="stat-box"><div class="num">'+Math.floor(G.meters)+'m</div><div class="lab">Distance</div></div>' +
+      '</div>' +
+      (G.coins>=best ? '<p class="center">New best score 🏅</p>' : '<p class="center">Best score: '+best+' coins</p>') +
+      '<button class="btn" id="siteBtn">See Reviewed Exchanges on AllMyOption</button>' +
+      '<button class="btn secondary" id="shareBtn">Share Result</button>' +
+      '<button class="btn ghost" id="againBtn">Run Again</button>';
+  } else {
+    overlay.innerHTML =
+      '<div class="center"><div class="vault-visual">'+vaultLockedSvg()+'</div></div>' +
+      '<div class="eyebrow center" style="text-align:center;">Out of keys</div>' +
+      '<h1 class="center">A scam badge got you this time</h1>' +
+      '<p class="center">You made it '+Math.floor(G.meters)+'m and collected '+G.coins+' coins. Telling a real, reviewed exchange from a suspicious-looking name is exactly what AllMyOption checks before you deposit anywhere.</p>' +
+      '<button class="btn" id="retryBtn">Try Again</button>' +
+      '<button class="btn secondary" id="guideBtn">How AllMyOption Reviews Exchanges</button>';
+  }
+
+  var siteBtn = document.getElementById('siteBtn');
+  if (siteBtn) siteBtn.addEventListener('click', function(){ openExternal('https://allmyoption.com'); });
+  var shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) shareBtn.addEventListener('click', function(){
+    var text = 'I told scam from legit for '+Math.floor(G.meters)+'m and collected '+G.coins+' coins in AllMyOption\'s Scam or Legit game 🏆';
+    if (navigator.share){ navigator.share({text:text}).catch(function(){}); }
+    else if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ toast('Result copied'); }); }
+    else { toast(text); }
+  });
+  var retryBtn = document.getElementById('retryBtn');
+  if (retryBtn) retryBtn.addEventListener('click', startRun);
+  var guideBtn = document.getElementById('guideBtn');
+  if (guideBtn) guideBtn.addEventListener('click', function(){ openExternal('https://allmyoption.com'); });
+  var againBtn = document.getElementById('againBtn');
+  if (againBtn) againBtn.addEventListener('click', startRun);
+}
+
+showIntro();
+})();
+</script>
+</body>
+</html>
